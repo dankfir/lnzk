@@ -1,4 +1,4 @@
-# 微信云托管 Dockerfile - 多阶段构建
+# 微信云托管 Dockerfile - 多阶段构建（Maven构建 → Alpine运行）
 FROM maven:3.6.0-jdk-8-slim as build
 
 WORKDIR /app

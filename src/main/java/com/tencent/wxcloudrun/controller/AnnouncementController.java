@@ -52,6 +52,23 @@ public class AnnouncementController {
         return ApiResponse.ok(list);
     }
 
+    /** 清空测试数据（管理用） */
+    @PostMapping("/admin/clear-test")
+    ApiResponse clearTest() {
+        // 下架 originUrl 含 test- 的公告
+        int count = 0;
+        AnnouncementSearchRequest page = new AnnouncementSearchRequest();
+        page.setPage(1); page.setPageSize(100);
+        PageResult<Announcement> result = announcementService.search(page);
+        for (Announcement ann : result.getList()) {
+            if (ann.getOriginUrl() != null && ann.getOriginUrl().contains("test-")) {
+                announcementService.updateStatus(ann.getId(), 0);
+                count++;
+            }
+        }
+        return ApiResponse.ok("已清理 " + count + " 条测试数据");
+    }
+
     /** 首页数据：最新公告 + 按分类统计 */
     @GetMapping("/home")
     ApiResponse home() {

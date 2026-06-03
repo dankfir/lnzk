@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tencent.wxcloudrun.dao.DataSourceMapper">
+
+    <resultMap id="dataSourceMap" type="com.tencent.wxcloudrun.model.DataSource">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="url" column="url"/>
+        <result property="type" column="type"/>
+        <result property="region" column="region"/>
+        <result property="category" column="category"/>
+        <result property="crawlConfig" column="crawl_config"/>
+        <result property="status" column="status"/>
+        <result property="lastCrawlAt" column="last_crawl_at"/>
+        <result property="crawlInterval" column="crawl_interval"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="getById" resultMap="dataSourceMap">
+        SELECT * FROM data_source WHERE id = #{id}
+    </select>
+
+    <select id="listAll" resultMap="dataSourceMap">
+        SELECT * FROM data_source ORDER BY id
+    </select>
+
+    <select id="listEnabled" resultMap="dataSourceMap">
+        SELECT * FROM data_source WHERE status = 1 ORDER BY id
+    </select>
+
+    <insert id="insert" parameterType="com.tencent.wxcloudrun.model.DataSource"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO data_source (name, url, type, region, category, crawl_config, status, crawl_interval)
+        VALUES (#{name}, #{url}, #{type}, #{region}, #{category}, #{crawlConfig}, #{status}, #{crawlInterval})
+    </insert>
+
+    <update id="update" parameterType="com.tencent.wxcloudrun.model.DataSource">
+        UPDATE data_source SET
+            name = #{name}, url = #{url}, type = #{type},
+            region = #{region}, category = #{category},
+            crawl_config = #{crawlConfig}, status = #{status},
+            crawl_interval = #{crawlInterval}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateLastCrawlAt">
+        UPDATE data_source SET last_crawl_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE data_source SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

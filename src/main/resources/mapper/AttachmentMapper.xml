@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tencent.wxcloudrun.dao.AttachmentMapper">
+
+    <resultMap id="attachmentMap" type="com.tencent.wxcloudrun.model.Attachment">
+        <id property="id" column="id"/>
+        <result property="announcementId" column="announcement_id"/>
+        <result property="fileName" column="file_name"/>
+        <result property="fileUrl" column="file_url"/>
+        <result property="fileType" column="file_type"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="parsedStatus" column="parsed_status"/>
+        <result property="parsedData" column="parsed_data"/>
+        <result property="ossKey" column="oss_key"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.tencent.wxcloudrun.model.Attachment"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attachment (announcement_id, file_name, file_url, file_type, file_size, parsed_status)
+        VALUES (#{announcementId}, #{fileName}, #{fileUrl}, #{fileType}, #{fileSize}, #{parsedStatus})
+    </insert>
+
+    <select id="listByAnnouncementId" resultMap="attachmentMap">
+        SELECT * FROM attachment WHERE announcement_id = #{announcementId}
+    </select>
+
+    <select id="listUnparsed" resultMap="attachmentMap">
+        SELECT * FROM attachment WHERE parsed_status = 0 LIMIT #{limit}
+    </select>
+
+    <update id="updateParsedStatus">
+        UPDATE attachment SET parsed_status = #{status}, parsed_data = #{parsedData}
+        WHERE id = #{id}
+    </update>
+
+    <select id="getById" resultMap="attachmentMap">
+        SELECT * FROM attachment WHERE id = #{id}
+    </select>
+
+</mapper>

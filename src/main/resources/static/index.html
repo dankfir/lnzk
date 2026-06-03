@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>辽宁公职招考 - 后台管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333;}
+.header{background:linear-gradient(135deg,#1a6fb5,#155a8a);color:#fff;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;}
+.header h1{font-size:22px;}
+.stats{display:flex;gap:60px;}
+.stat{text-align:center;}
+.stat .num{font-size:28px;font-weight:700;}
+.stat .label{font-size:13px;opacity:.8;}
+.nav{background:#fff;padding:0 30px;border-bottom:1px solid #e8e8e8;display:flex;gap:0;}
+.nav a{display:block;padding:14px 24px;color:#666;text-decoration:none;border-bottom:2px solid transparent;font-size:15px;cursor:pointer;}
+.nav a.active{color:#1a6fb5;border-bottom-color:#1a6fb5;font-weight:600;}
+.main{padding:20px 30px;max-width:1400px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.card{background:#fff;border-radius:8px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid #f0f0f0;}
+th{background:#fafafa;color:#666;font-weight:600;font-size:13px;}
+tr:hover{background:#f8f9ff;}
+.tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;}
+.tag-on{background:#e8f5e9;color:#2e7d32;}
+.tag-off{background:#ffebee;color:#c62828;}
+.tag-ok{background:#e8f5e9;color:#2e7d32;}
+.tag-err{background:#ffebee;color:#c62828;}
+.tag-pending{background:#fff3e0;color:#ef6c00;}
+.btn{padding:6px 18px;border-radius:4px;border:none;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:4px;}
+.btn-primary{background:#1a6fb5;color:#fff;}
+.btn-outline{background:#fff;color:#1a6fb5;border:1px solid #1a6fb5;}
+.btn-danger{background:#fff;color:#c62828;border:1px solid #c62828;}
+.btn-sm{padding:4px 12px;font-size:12px;}
+.btn+.btn{margin-left:8px;}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.modal{background:#fff;border-radius:12px;padding:30px;width:560px;max-height:80vh;overflow-y:auto;}
+.modal h3{margin-bottom:20px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;color:#666;margin-bottom:6px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:14px;font-family:inherit;}
+.form-group textarea{min-height:100px;resize:vertical;}
+.form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px;}
+.toast{position:fixed;top:20px;right:20px;background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;}
+.empty-state{text-align:center;padding:60px;color:#999;}
+.spinner{width:20px;height:20px;border:2px solid #e0e0e0;border-top-color:#1a6fb5;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 辽宁公职招考 - 后台管理</h1>
+  <div class="stats" id="globalStats">
+    <div class="stat"><div class="num">-</div><div class="label">数据源</div></div>
+    <div class="stat"><div class="num">-</div><div class="label">公告总数</div></div>
+    <div class="stat"><div class="num">-</div><div class="label">今日新增</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <a class="active" data-panel="sources">📡 数据源</a>
+  <a data-panel="logs">📊 抓取日志</a>
+  <a data-panel="push">📬 推送记录</a>
+  <a data-panel="announcements">📄 公告列表</a>
+</div>
+
+<div class="main">
+
+  <!-- 数据源面板 -->
+  <div id="panel-sources" class="panel active">
+    <div class="card">
+      <div class="card-title">
+        <span>数据源列表</span>
+        <button class="btn btn-primary" onclick="showSourceModal()">+ 新增数据源</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>ID</th><th>名称</th><th>URL</th><th>分类</th><th>地区</th><th>状态</th><th>最后抓取</th><th>操作</th>
+        </tr></thead>
+        <tbody id="sourceTableBody"><tr><td colspan="8" class="empty-state">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 抓取日志面板 -->
+  <div id="panel-logs" class="panel">
+    <div class="card">
+      <div class="card-title">最近抓取日志</div>
+      <table>
+        <thead><tr>
+          <th>时间</th><th>数据源ID</th><th>状态</th><th>发现</th><th>新增</th><th>耗时</th><th>错误</th>
+        </tr></thead>
+        <tbody id="logTableBody"><tr><td colspan="7" class="empty-state">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 推送记录面板 -->
+  <div id="panel-push" class="panel">
+    <div class="card">
+      <div class="card-title">最近推送记录</div>
+      <table>
+        <thead><tr>
+          <th>时间</th><th>用户ID</th><th>公告ID</th><th>类型</th><th>状态</th><th>重试</th>
+        </tr></thead>
+        <tbody id="pushTableBody"><tr><td colspan="6" class="empty-state">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 公告列表面板 -->
+  <div id="panel-announcements" class="panel">
+    <div class="card">
+      <div class="card-title">
+        <span>公告列表</span>
+        <button class="btn btn-outline btn-sm" onclick="loadAnnouncements()">刷新</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>ID</th><th>标题</th><th>分类</th><th>地区</th><th>发布日期</th><th>状态</th>
+        </tr></thead>
+        <tbody id="annTableBody"><tr><td colspan="6" class="empty-state">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- 数据源编辑弹窗 -->
+<div class="modal-overlay" id="sourceModal" style="display:none">
+  <div class="modal">
+    <h3 id="sourceModalTitle">新增数据源</h3>
+    <input type="hidden" id="sourceId">
+    <div class="form-group"><label>名称</label><input id="sourceName" placeholder="例：辽宁省人事考试网"></div>
+    <div class="form-group"><label>URL</label><input id="sourceUrl" placeholder="https://www.lnrsks.com"></div>
+    <div class="form-group"><label>类型</label><select id="sourceType"><option value="gov_website">政府网站</option><option value="rss">RSS</option><option value="api">API</option></select></div>
+    <div class="form-group"><label>地区</label><input id="sourceRegion" placeholder="辽宁省 / 沈阳 / 大连"></div>
+    <div class="form-group"><label>分类</label><select id="sourceCategory"><option value="gwy">公务员</option><option value="sydw">事业单位</option><option value="jiaoshi">教师招聘</option><option value="yiliao">医疗卫生</option><option value="guoqi">国企招聘</option><option value="qt">其他</option></select></div>
+    <div class="form-group"><label>抓取配置 (JSON)</label><textarea id="sourceCrawlConfig" placeholder='{"listUrls":["..."],"listSelector":"..."}'></textarea></div>
+    <div class="form-group"><label>抓取间隔(秒)</label><input id="sourceInterval" type="number" value="3600"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeSourceModal()">取消</button>
+      <button class="btn btn-primary" id="saveSourceBtn" onclick="saveSource()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BASE = '';
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.style.opacity = '0', 2000);
+}
+
+// ============ 导航 ============
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', function() {
+    document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + this.dataset.panel).classList.add('active');
+    if (this.dataset.panel === 'sources') loadSources();
+    else if (this.dataset.panel === 'logs') loadLogs();
+    else if (this.dataset.panel === 'push') loadPushRecords();
+    else if (this.dataset.panel === 'announcements') loadAnnouncements();
+  });
+});
+
+// ============ 数据源管理 ============
+async function loadSources() {
+  try {
+    const res = await fetch(BASE + '/api/admin/datasource?all=true');
+    const data = await res.json();
+    const sources = data.data || [];
+    document.getElementById('sourceTableBody').innerHTML = sources.length === 0
+      ? '<tr><td colspan="8" class="empty-state">暂无数据源，点击"新增数据源"开始</td></tr>'
+      : sources.map(s => `<tr>
+        <td>${s.id}</td>
+        <td><strong>${esc(s.name)}</strong></td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.url)}</td>
+        <td><span class="tag tag-on">${catName(s.category)}</span></td>
+        <td>${esc(s.region||'-')}</td>
+        <td><span class="tag ${s.status===1?'tag-on':'tag-off'}">${s.status===1?'启用':'停用'}</span></td>
+        <td>${s.lastCrawlAt||'从未'}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="editSource(${s.id})">编辑</button>
+          <button class="btn btn-sm ${s.status===1?'btn-danger':'btn-primary'}" onclick="toggleSource(${s.id},${s.status})">${s.status===1?'停用':'启用'}</button>
+          <button class="btn btn-outline btn-sm" onclick="testSource(${s.id})">测试</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { document.getElementById('sourceTableBody').innerHTML = '<tr><td colspan="8" class="empty-state">加载失败</td></tr>'; }
+}
+
+function showSourceModal() {
+  document.getElementById('sourceModalTitle').textContent = '新增数据源';
+  document.getElementById('sourceId').value = '';
+  document.getElementById('sourceName').value = '';
+  document.getElementById('sourceUrl').value = '';
+  document.getElementById('sourceType').value = 'gov_website';
+  document.getElementById('sourceRegion').value = '';
+  document.getElementById('sourceCategory').value = 'gwy';
+  document.getElementById('sourceCrawlConfig').value = '{"listUrls":[""],"listSelector":"a"}';
+  document.getElementById('sourceInterval').value = '3600';
+  document.getElementById('sourceModal').style.display = 'flex';
+}
+
+async function editSource(id) {
+  const res = await fetch(BASE + '/api/admin/datasource/' + id);
+  const data = await res.json();
+  const s = data.data.source;
+  document.getElementById('sourceModalTitle').textContent = '编辑数据源';
+  document.getElementById('sourceId').value = s.id;
+  document.getElementById('sourceName').value = s.name;
+  document.getElementById('sourceUrl').value = s.url;
+  document.getElementById('sourceType').value = s.type;
+  document.getElementById('sourceRegion').value = s.region || '';
+  document.getElementById('sourceCategory').value = s.category || 'gwy';
+  document.getElementById('sourceCrawlConfig').value = s.crawlConfig || '';
+  document.getElementById('sourceInterval').value = s.crawlInterval || 3600;
+  document.getElementById('sourceModal').style.display = 'flex';
+}
+
+function closeSourceModal() {
+  document.getElementById('sourceModal').style.display = 'none';
+}
+
+async function saveSource() {
+  const id = document.getElementById('sourceId').value;
+  const body = {
+    name: document.getElementById('sourceName').value,
+    url: document.getElementById('sourceUrl').value,
+    type: document.getElementById('sourceType').value,
+    region: document.getElementById('sourceRegion').value,
+    category: document.getElementById('sourceCategory').value,
+    crawlConfig: document.getElementById('sourceCrawlConfig').value,
+    crawlInterval: parseInt(document.getElementById('sourceInterval').value) || 3600
+  };
+  const url = id ? BASE + '/api/admin/datasource/' + id : BASE + '/api/admin/datasource';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, {method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if (res.ok) { closeSourceModal(); loadSources(); showToast(id ? '已更新' : '已创建'); }
+  else showToast('保存失败');
+}
+
+async function toggleSource(id, currentStatus) {
+  const newStatus = currentStatus === 1 ? 0 : 1;
+  await fetch(BASE + '/api/admin/datasource/' + id + '/status', {
+    method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({status:newStatus})
+  });
+  loadSources();
+  showToast(newStatus === 1 ? '已启用' : '已停用');
+}
+
+async function testSource(id) {
+  showToast('正在测试...');
+  const res = await fetch(BASE + '/api/admin/datasource/' + id + '/test', {method:'POST'});
+  const data = await res.json();
+  const r = data.data;
+  showToast(r.reachable ? `连通 ✓ HTTP ${r.httpStatus} (${r.responseTimeMs}ms)` : `不通 ✗ ${r.error}`);
+}
+
+// ============ 抓取日志 ============
+async function loadLogs() {
+  try {
+    // 通过公告检索接口间接获取最近活跃情况
+    const res = await fetch(BASE + '/api/announcement/latest?limit=20');
+    const data = await res.json();
+    const list = data.data || [];
+    document.getElementById('logTableBody').innerHTML = list.length === 0
+      ? '<tr><td colspan="7" class="empty-state">暂无数据</td></tr>'
+      : list.map(a => `<tr>
+        <td>${a.createdAt||'-'}</td>
+        <td>${a.sourceId||'-'}</td>
+        <td><span class="tag tag-ok">成功</span></td>
+        <td>-</td>
+        <td>1</td>
+        <td>-</td>
+        <td>-</td>
+      </tr>`).join('');
+  } catch(e) { document.getElementById('logTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>'; }
+}
+
+async function loadPushRecords() {
+  try {
+    const res = await fetch(BASE + '/api/admin/push/records?limit=50');
+    const data = await res.json();
+    const list = data.data || [];
+    document.getElementById('pushTableBody').innerHTML = list.length === 0
+      ? '<tr><td colspan="6" class="empty-state">暂无推送记录</td></tr>'
+      : list.map(r => `<tr>
+        <td>${r.createdAt||'-'}</td>
+        <td>${r.userId}</td>
+        <td><a href="javascript:void(0)" style="color:#1a6fb5">${r.announcementId}</a></td>
+        <td>${r.pushType==='subscription'?'订阅推送':'考试提醒'}</td>
+        <td><span class="tag ${r.status==='success'?'tag-ok':r.status==='failed'?'tag-err':'tag-pending'}">${r.status==='success'?'成功':r.status==='failed'?'失败':'待发送'}</span></td>
+        <td>${r.retryCount||0}</td>
+      </tr>`).join('');
+  } catch(e) {
+    document.getElementById('pushTableBody').innerHTML = '<tr><td colspan="6" class="empty-state">加载失败</td></tr>';
+  }
+}
+
+async function loadAnnouncements() {
+  try {
+    const res = await fetch(BASE + '/api/announcement/latest?limit=50');
+    const data = await res.json();
+    const list = data.data || [];
+    document.getElementById('annTableBody').innerHTML = list.length === 0
+      ? '<tr><td colspan="6" class="empty-state">暂无公告</td></tr>'
+      : list.map(a => `<tr>
+        <td>${a.id}</td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.title)}</td>
+        <td><span class="tag tag-on">${catName(a.category)}</span></td>
+        <td>${esc(a.region||'-')}</td>
+        <td>${a.publishDate||'-'}</td>
+        <td><span class="tag ${a.status===1?'tag-on':'tag-off'}">${a.status===1?'上架':'下架'}</span></td>
+      </tr>`).join('');
+  } catch(e) { document.getElementById('annTableBody').innerHTML = '<tr><td colspan="6" class="empty-state">加载失败</td></tr>'; }
+}
+
+function esc(s) { return s ? s.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+function catName(k) {
+  const m = {gwy:'公务员',sydw:'事业单位',jiaoshi:'教师',yiliao:'医疗',guoqi:'国企',qt:'其他'};
+  return m[k] || k || '-';
+}
+
+// 初始化
+loadSources();
+</script>
+</body>
+</html>

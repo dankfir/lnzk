@@ -1,0 +1,22 @@
+{
+  "name": "lnzk",
+  "description": "辽宁省公职类招考信息聚合",
+  "containerPort": 80,
+  "envParams": {
+    "MYSQL_ADDRESS": "",
+    "MYSQL_USERNAME": "root",
+    "MYSQL_PASSWORD": "YaNbZpf8",
+    "MYSQL_DATABASE": "lnzk",
+    "REDIS_HOST": "",
+    "REDIS_PORT": "6379",
+    "REDIS_PASSWORD": "",
+    "WX_APPID": "",
+    "WX_SECRET": ""
+  },
+  "cpu": 0.5,
+  "mem": 1,
+  "minNum": 1,
+  "maxNum": 5,
+  "policyType": "cpu",
+  "policyThreshold": 60
+}

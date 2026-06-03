@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tencent.wxcloudrun.dao.CrawlLogMapper">
+
+    <resultMap id="crawlLogMap" type="com.tencent.wxcloudrun.model.CrawlLog">
+        <id property="id" column="id"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="status" column="status"/>
+        <result property="totalUrls" column="total_urls"/>
+        <result property="newItems" column="new_items"/>
+        <result property="updatedItems" column="updated_items"/>
+        <result property="errorMsg" column="error_msg"/>
+        <result property="durationMs" column="duration_ms"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.tencent.wxcloudrun.model.CrawlLog"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO crawl_log (source_id, status, total_urls, new_items, updated_items, error_msg, duration_ms)
+        VALUES (#{sourceId}, #{status}, #{totalUrls}, #{newItems}, #{updatedItems}, #{errorMsg}, #{durationMs})
+    </insert>
+
+    <select id="getLatestBySourceId" resultMap="crawlLogMap">
+        SELECT * FROM crawl_log WHERE source_id = #{sourceId}
+        ORDER BY created_at DESC LIMIT 1
+    </select>
+
+</mapper>

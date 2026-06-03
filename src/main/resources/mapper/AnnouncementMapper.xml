@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tencent.wxcloudrun.dao.AnnouncementMapper">
+
+    <resultMap id="announcementMap" type="com.tencent.wxcloudrun.model.Announcement">
+        <id property="id" column="id"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="originUrl" column="origin_url"/>
+        <result property="originId" column="origin_id"/>
+        <result property="title" column="title"/>
+        <result property="contentHtml" column="content_html"/>
+        <result property="contentText" column="content_text"/>
+        <result property="publishDate" column="publish_date"/>
+        <result property="category" column="category"/>
+        <result property="region" column="region"/>
+        <result property="recruitUnit" column="recruit_unit"/>
+        <result property="recruitCount" column="recruit_count"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="applyStart" column="apply_start"/>
+        <result property="applyEnd" column="apply_end"/>
+        <result property="examDate" column="exam_date"/>
+        <result property="interviewDate" column="interview_date"/>
+        <result property="hasAttachment" column="has_attachment"/>
+        <result property="status" column="status"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="fingerprint" column="fingerprint"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="getById" resultMap="announcementMap">
+        SELECT * FROM announcement WHERE id = #{id}
+    </select>
+
+    <select id="getByFingerprint" resultMap="announcementMap">
+        SELECT * FROM announcement WHERE fingerprint = #{fingerprint}
+    </select>
+
+    <select id="getByOriginUrl" resultMap="announcementMap">
+        SELECT * FROM announcement WHERE origin_url = #{originUrl}
+    </select>
+
+    <insert id="insert" parameterType="com.tencent.wxcloudrun.model.Announcement"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO announcement (
+            source_id, origin_url, origin_id, title, content_html, content_text,
+            publish_date, category, region, recruit_unit, recruit_count,
+            contact_phone, apply_start, apply_end, exam_date, interview_date,
+            has_attachment, status, fingerprint
+        ) VALUES (
+            #{sourceId}, #{originUrl}, #{originId}, #{title}, #{contentHtml}, #{contentText},
+            #{publishDate}, #{category}, #{region}, #{recruitUnit}, #{recruitCount},
+            #{contactPhone}, #{applyStart}, #{applyEnd}, #{examDate}, #{interviewDate},
+            #{hasAttachment}, #{status}, #{fingerprint}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.tencent.wxcloudrun.model.Announcement">
+        UPDATE announcement SET
+            title = #{title},
+            content_html = #{contentHtml},
+            content_text = #{contentText},
+            publish_date = #{publishDate},
+            category = #{category},
+            region = #{region},
+            recruit_unit = #{recruitUnit},
+            recruit_count = #{recruitCount},
+            contact_phone = #{contactPhone},
+            apply_start = #{applyStart},
+            apply_end = #{applyEnd},
+            exam_date = #{examDate},
+            interview_date = #{interviewDate},
+            has_attachment = #{hasAttachment},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE announcement SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <update id="incrementViewCount">
+        UPDATE announcement SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 多条件检索 + 全文检索 -->
+    <select id="search" resultMap="announcementMap">
+        SELECT a.* FROM announcement a
+        <where>
+            <if test="status != null">
+                AND a.status = #{status}
+            </if>
+            <if test="category != null and category != ''">
+                AND a.category = #{category}
+            </if>
+            <if test="region != null and region != ''">
+                AND a.region = #{region}
+            </if>
+            <if test="sourceId != null">
+                AND a.source_id = #{sourceId}
+            </if>
+            <if test="education != null and education != ''">
+                AND a.id IN (
+                    SELECT jp.announcement_id FROM job_position jp
+                    WHERE jp.education = #{education}
+                )
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    a.title LIKE CONCAT('%', #{keyword}, '%')
+                    OR a.content_text LIKE CONCAT('%', #{keyword}, '%')
+                    OR a.recruit_unit LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY a.publish_date DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM announcement a
+        <where>
+            <if test="status != null">
+                AND a.status = #{status}
+            </if>
+            <if test="category != null and category != ''">
+                AND a.category = #{category}
+            </if>
+            <if test="region != null and region != ''">
+                AND a.region = #{region}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    a.title LIKE CONCAT('%', #{keyword}, '%')
+                    OR a.content_text LIKE CONCAT('%', #{keyword}, '%')
+                    OR a.recruit_unit LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </select>
+
+    <select id="listLatest" resultMap="announcementMap">
+        SELECT * FROM announcement WHERE status = 1
+        ORDER BY publish_date DESC LIMIT #{limit}
+    </select>
+
+    <select id="listBySourceId" resultMap="announcementMap">
+        SELECT * FROM announcement WHERE source_id = #{sourceId}
+        ORDER BY publish_date DESC
+    </select>
+
+    <update id="expireOlderThan">
+        UPDATE announcement SET status = 0
+        WHERE status = 1 AND publish_date &lt; DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+    </update>
+
+</mapper>

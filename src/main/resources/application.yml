@@ -1,0 +1,40 @@
+server:
+  port: 80
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_ADDRESS}/${MYSQL_DATABASE:lnzk}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+  mvc:
+    view:
+      suffix: .html
+      prefix: /
+
+mybatis:
+  mapper-locations: classpath*:mapper/*Mapper.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 微信小程序配置
+wx:
+  miniapp:
+    appid: ${WX_APPID}
+    secret: ${WX_SECRET}
+    msg-data-format: JSON
+
+# 业务配置
+app:
+  crawl:
+    interval-minutes: 60
+    user-agent-rotation: true
+    request-delay-ms: 3000
+  push:
+    batch-size: 100
+    max-retry: 3

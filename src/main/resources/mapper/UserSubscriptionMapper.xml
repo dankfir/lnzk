@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tencent.wxcloudrun.dao.UserSubscriptionMapper">
+
+    <resultMap id="subscriptionMap" type="com.tencent.wxcloudrun.model.UserSubscription">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="regions" column="regions"/>
+        <result property="categories" column="categories"/>
+        <result property="keywords" column="keywords"/>
+        <result property="pushEnabled" column="push_enabled"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="getByUserId" resultMap="subscriptionMap">
+        SELECT * FROM user_subscription WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insert" parameterType="com.tencent.wxcloudrun.model.UserSubscription"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_subscription (user_id, regions, categories, keywords, push_enabled)
+        VALUES (#{userId}, #{regions}, #{categories}, #{keywords}, #{pushEnabled})
+    </insert>
+
+    <update id="update" parameterType="com.tencent.wxcloudrun.model.UserSubscription">
+        UPDATE user_subscription SET
+            regions = #{regions},
+            categories = #{categories},
+            keywords = #{keywords},
+            push_enabled = #{pushEnabled}
+        WHERE user_id = #{userId}
+    </update>
+
+    <select id="findMatching" resultMap="subscriptionMap">
+        SELECT * FROM user_subscription
+        WHERE push_enabled = 1
+        <if test="category != null and category != ''">
+            AND (categories LIKE CONCAT('%', #{category}, '%') OR categories IS NULL OR categories = '')
+        </if>
+        <if test="region != null and region != ''">
+            AND (regions LIKE CONCAT('%', #{region}, '%') OR regions IS NULL OR regions = '')
+        </if>
+    </select>
+
+</mapper>

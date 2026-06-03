@@ -1,0 +1,11 @@
+# 辽宁省公职类招考信息聚合 - Python爬虫引擎
+# 独立容器运行，通过 HTTP 上报数据到 Spring Boot API
+
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+python-docx>=0.8.11
+openpyxl>=3.1.0
+pdfplumber>=0.10.0
+schedule>=1.2.0
+python-dotenv>=1.0.0

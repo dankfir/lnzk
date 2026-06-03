@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tencent.wxcloudrun.dao.JobPositionMapper">
+
+    <resultMap id="jobPositionMap" type="com.tencent.wxcloudrun.model.JobPosition">
+        <id property="id" column="id"/>
+        <result property="announcementId" column="announcement_id"/>
+        <result property="unitName" column="unit_name"/>
+        <result property="positionName" column="position_name"/>
+        <result property="recruitCount" column="recruit_count"/>
+        <result property="education" column="education"/>
+        <result property="degree" column="degree"/>
+        <result property="major" column="major"/>
+        <result property="ageLimit" column="age_limit"/>
+        <result property="politicalStatus" column="political_status"/>
+        <result property="workExperience" column="work_experience"/>
+        <result property="otherRequire" column="other_require"/>
+        <result property="examCategory" column="exam_category"/>
+        <result property="salaryNote" column="salary_note"/>
+        <result property="rawData" column="raw_data"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="listByAnnouncementId" resultMap="jobPositionMap">
+        SELECT * FROM job_position WHERE announcement_id = #{announcementId}
+        ORDER BY id
+    </select>
+
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO job_position (
+            announcement_id, unit_name, position_name, recruit_count,
+            education, degree, major, age_limit, political_status,
+            work_experience, other_require, exam_category, salary_note, raw_data
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.announcementId}, #{item.unitName}, #{item.positionName}, #{item.recruitCount},
+                #{item.education}, #{item.degree}, #{item.major}, #{item.ageLimit}, #{item.politicalStatus},
+                #{item.workExperience}, #{item.otherRequire}, #{item.examCategory}, #{item.salaryNote}, #{item.rawData}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteByAnnouncementId">
+        DELETE FROM job_position WHERE announcement_id = #{announcementId}
+    </delete>
+
+</mapper>

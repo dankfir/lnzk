@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tencent.wxcloudrun.dao.PushRecordMapper">
+
+    <resultMap id="pushRecordMap" type="com.tencent.wxcloudrun.model.PushRecord">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="announcementId" column="announcement_id"/>
+        <result property="pushType" column="push_type"/>
+        <result property="status" column="status"/>
+        <result property="pushContent" column="push_content"/>
+        <result property="errorMsg" column="error_msg"/>
+        <result property="retryCount" column="retry_count"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.tencent.wxcloudrun.model.PushRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO push_record (user_id, announcement_id, push_type, status, push_content)
+        VALUES (#{userId}, #{announcementId}, #{pushType}, #{status}, #{pushContent})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE push_record SET status = #{status}, error_msg = #{errorMsg}, retry_count = retry_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByUserAndAnn" resultMap="pushRecordMap">
+        SELECT * FROM push_record
+        WHERE user_id = #{userId} AND announcement_id = #{announcementId}
+        LIMIT 1
+    </select>
+
+    <select id="listPendingRetry" resultMap="pushRecordMap">
+        SELECT * FROM push_record
+        WHERE status = 'failed' AND retry_count &lt; 3
+        ORDER BY created_at LIMIT #{limit}
+    </select>
+
+    <select id="listRecent" resultMap="pushRecordMap">
+        SELECT * FROM push_record ORDER BY created_at DESC LIMIT #{limit}
+    </select>
+
+</mapper>

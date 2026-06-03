@@ -7,9 +7,6 @@
     "MYSQL_USERNAME": "root",
     "MYSQL_PASSWORD": "YaNbZpf8",
     "MYSQL_DATABASE": "lnzk",
-    "REDIS_HOST": "",
-    "REDIS_PORT": "6379",
-    "REDIS_PASSWORD": "",
     "WX_APPID": "",
     "WX_SECRET": ""
   },

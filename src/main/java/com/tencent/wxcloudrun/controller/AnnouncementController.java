@@ -52,6 +52,13 @@ public class AnnouncementController {
         return ApiResponse.ok(list);
     }
 
+    /** 清空数据源公告（管理用） */
+    @PostMapping("/admin/clear")
+    ApiResponse clearSource(@RequestParam(defaultValue = "1") Integer sourceId) {
+        announcementService.deleteBySourceId(sourceId);
+        return ApiResponse.ok("已清空数据源 " + sourceId);
+    }
+
     /** 清空测试数据（管理用） */
     @PostMapping("/admin/clear-test")
     ApiResponse clearTest() {

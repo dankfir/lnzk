@@ -22,4 +22,6 @@ public interface AnnouncementService {
     void update(Announcement announcement);
 
     void updateStatus(Integer id, Integer status);
+
+    void deleteBySourceId(Integer sourceId);
 }

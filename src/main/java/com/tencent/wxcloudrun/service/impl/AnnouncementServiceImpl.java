@@ -76,4 +76,9 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     public void updateStatus(Integer id, Integer status) {
         announcementMapper.updateStatus(id, status);
     }
+
+    @Override
+    public void deleteBySourceId(Integer sourceId) {
+        announcementMapper.deleteBySourceId(sourceId);
+    }
 }

@@ -211,6 +211,50 @@ class BaseCrawler:
         return items
 
 
+# ============ 文本清洗 ============
+
+def clean_text(text: str) -> str:
+    """清洗公告正文：去导航/去空白/去重复行"""
+    if not text:
+        return ""
+
+    # 1. 按行分割
+    lines = text.split('\n')
+
+    # 2. 过滤无意义行
+    noise_keywords = ['首页', '考试动态', '考试通知', '考试计划', '成绩证书',
+                      '新闻中心', '工作动态', '政策法规', '资料下载', '机构概况',
+                      '互动专区', '联系方式', '常见问题', '常用考点', '友情链接',
+                      '辽ICP备', '关于我们', '网站地图', '隐私声明', '网站帮助',
+                      '设为首页', '加入收藏', '网站纠错', 'copyright', '©',
+                      '技术支持', '主办单位', '承建单位', '网站标识码']
+
+    clean_lines = []
+    for line in lines:
+        s = line.strip()
+        if not s or len(s) < 2:  # 空行或太短
+            continue
+        # 过滤导航/页脚
+        if any(kw in s for kw in noise_keywords):
+            continue
+        # 过滤纯数字/日期行（但保留含中文的日期行）
+        if re.match(r'^[\d\s\-/:：,，.。、()（）]+$', s) and len(s) < 20:
+            continue
+        # 过滤导航菜单（连续短词）
+        if len(s) < 6 and re.match(r'^[\u4e00-\u9fa5，。、]+$', s):
+            continue
+        clean_lines.append(s)
+
+    # 3. 合并并压缩空白
+    result = '\n'.join(clean_lines)
+    result = re.sub(r'\n{3,}', '\n\n', result)  # 最多2个空行
+    result = re.sub(r'[ \t]{2,}', ' ', result)   # 合并空格
+    result = result.replace('&nbsp;', ' ')
+    result = result.strip()
+
+    return result
+
+
 # ============ 通用公告页解析 ============
 
 class GovAnnouncementCrawler(BaseCrawler):
@@ -234,20 +278,37 @@ class GovAnnouncementCrawler(BaseCrawler):
                 ann.title = tag.get_text(strip=True)
                 break
 
-        # 正文
+        # 正文（增加 site-specific 选择器 + 降级提取）
         content_selectors = [
             'div.article_content', 'div.news_content', 'div.TRS_Editor',
-            'div#zoom', 'div.content', 'div.main-content', 'article'
+            'div#zoom', 'div.content', 'div.main-content', 'article',
+            '.listleftback',       # lnrsks.com 内容区
+            '.kaoshireadback',     # lnrsks.com 正文区
+            '.listcontentback',    # lnrsks.com 替代
+            '.con_text',           # 常见政府网站
+            '#UCAP-CONTENT',       # 常见政务网站
         ]
+        content_div = None
         for sel in content_selectors:
             content_div = soup.select_one(sel)
-            if content_div:
+            if content_div and len(content_div.get_text(strip=True)) > 200:
                 ann.content_html = str(content_div)
-                ann.content_text = content_div.get_text(separator='\n', strip=True)
+                ann.content_text = clean_text(content_div.get_text(separator='\n'))
                 break
 
-        if not ann.content_text:
-            ann.content_text = soup.get_text(separator='\n', strip=True)[:5000]
+        if not content_div or not ann.content_text or len(ann.content_text) < 200:
+            # 降级：尝试找最大的 div 文本块
+            best_div = None
+            best_len = 0
+            for div in soup.find_all('div'):
+                t = div.get_text(strip=True)
+                if len(t) > best_len and len(t) < 50000:
+                    best_len = len(t)
+                    best_div = div
+            if best_div:
+                ann.content_text = clean_text(best_div.get_text(separator='\n'))[:8000]
+            else:
+                ann.content_text = soup.get_text(separator='\n', strip=True)[:5000]
 
         # 发布日期
         date_patterns = [

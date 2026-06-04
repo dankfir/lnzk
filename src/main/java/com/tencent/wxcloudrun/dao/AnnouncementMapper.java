@@ -44,4 +44,6 @@ public interface AnnouncementMapper {
 
     /** 批量下架超过指定天数的公告 */
     int expireOlderThan(@Param("days") Integer days);
+
+    int deleteBySourceId(@Param("sourceId") Integer sourceId);
 }

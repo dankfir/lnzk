@@ -156,4 +156,8 @@
         WHERE status = 1 AND publish_date &lt; DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
     </update>
 
+    <delete id="deleteBySourceId">
+        DELETE FROM announcement WHERE source_id = #{sourceId}
+    </delete>
+
 </mapper>
